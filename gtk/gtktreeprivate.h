@@ -271,6 +271,8 @@ struct _GtkTreeViewPrivate
   guint has_rules : 1;
   guint mark_rows_col_dirty : 1;
 
+  guint single_click_activate : 1;
+
   /* for DnD */
   guint empty_view_drop : 1;
 
@@ -463,6 +465,8 @@ void              _gtk_tree_view_column_get_neighbor_sizes (GtkTreeViewColumn *c
 							    gint              *left,
 							    gint              *right);
 
+void              _gtk_tree_view_set_single_click_activate (GtkTreeView       *tree_view,
+							    gboolean           single_click_activate);
 
 G_END_DECLS
 
