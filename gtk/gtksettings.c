@@ -126,7 +126,8 @@ enum {
   PROP_TOOLBAR_STYLE,
   PROP_TOOLBAR_ICON_SIZE,
   PROP_AUTO_MNEMONICS,
-  PROP_APPLICATION_PREFER_DARK_THEME
+  PROP_APPLICATION_PREFER_DARK_THEME,
+  PROP_FILES_SINGLE_CLICK_ACTIVATE
 };
 
 
@@ -1044,6 +1045,23 @@ gtk_settings_class_init (GtkSettingsClass *class)
                                                                  GTK_PARAM_READWRITE),
                                              NULL);
   g_assert (result == PROP_APPLICATION_PREFER_DARK_THEME);
+
+  /**
+   * GtkSettings:gtk-files-single-click-activate:
+   *
+   * Whether files should be activated with one click in the file manager
+   * and in GTK+ file choosers.
+   *
+   * Since: 2.90
+   */
+  result = settings_install_property_parser (class,
+                                             g_param_spec_boolean ("gtk-files-single-click-activate",
+						     		   P_("Activate files on single click"),
+								   P_("Whether files and folders should be activated on single or double click"),
+								   FALSE,
+								   GTK_PARAM_READWRITE),
+                                             NULL);
+  g_assert (result == PROP_FILES_SINGLE_CLICK_ACTIVATE);
 }
 
 static void
