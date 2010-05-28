@@ -302,6 +302,7 @@ struct _GtkFileChooserDefault
   guint has_recent : 1;
   guint show_size_column : 1;
   guint create_folders : 1;
+  guint has_busy_cursor : 1;
 
 #if 0
   guint shortcuts_drag_outside : 1;

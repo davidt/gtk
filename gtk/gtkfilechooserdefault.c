@@ -717,6 +717,7 @@ _gtk_file_chooser_default_init (GtkFileChooserDefault *impl)
   impl->sort_order = GTK_SORT_ASCENDING;
   impl->recent_manager = gtk_recent_manager_get_default ();
   impl->create_folders = TRUE;
+  impl->single_click_activate = FALSE;
 
   gtk_box_set_spacing (GTK_BOX (impl), 12);
 
@@ -4344,6 +4345,44 @@ list_button_press_event_cb (GtkWidget             *widget,
   return TRUE;
 }
 
+/* When single-click is enabled, display a hand when cursor
+ * is above a file */
+static gboolean
+list_motion_cb (GtkWidget             *widget,
+		GdkEventMotion        *event,
+		GtkFileChooserDefault *impl)
+{
+  static GdkCursor *hand_cursor = NULL;
+  GdkDisplay *current_display;
+
+  if (!impl->single_click_activate || impl->has_busy_cursor)
+    return FALSE;
+
+  current_display = gtk_widget_get_display (widget);
+  g_assert (current_display != NULL);
+
+  if (hand_cursor != NULL &&
+      gdk_cursor_get_display (hand_cursor) != current_display)
+    {
+      gdk_cursor_unref (hand_cursor);
+      hand_cursor = NULL;
+    }
+
+
+  if (hand_cursor == NULL)
+    hand_cursor = gdk_cursor_new_for_display (current_display,
+					      GDK_HAND2);
+
+  if (gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW (widget),
+			  	     event->x, event->y,
+				     NULL, NULL, NULL, NULL))
+    gdk_window_set_cursor (widget->window, hand_cursor);
+  else
+    gdk_window_set_cursor (widget->window, NULL);
+
+  return FALSE;
+}
+
 typedef struct {
   OperationMode operation_mode;
   gint general_column;
@@ -4457,6 +4496,8 @@ create_file_list (GtkFileChooserDefault *impl)
 		    G_CALLBACK (list_popup_menu_cb), impl);
   g_signal_connect (impl->browse_files_tree_view, "button-press-event",
 		    G_CALLBACK (list_button_press_event_cb), impl);
+  g_signal_connect (impl->browse_files_tree_view, "motion_notify_event",
+		    G_CALLBACK (list_motion_cb), impl);
 
   g_signal_connect (impl->browse_files_tree_view, "drag-data-received",
                     G_CALLBACK (file_list_drag_data_received_cb), impl);
@@ -5769,6 +5810,29 @@ change_icon_theme (GtkFileChooserDefault *impl)
   profile_end ("end", NULL);
 }
 
+/* Changes the single click policy wherever it is needed */
+static void
+change_single_click_policy (GtkFileChooserDefault *impl)
+{
+  GtkSettings *settings;
+
+  profile_start ("start", NULL);
+
+  settings = gtk_settings_get_for_screen (gtk_widget_get_screen (GTK_WIDGET (impl)));
+  g_object_get (settings, "gtk-files-single-click-activate", &(impl->single_click_activate), NULL);
+  _gtk_tree_view_set_single_click_activate (GTK_TREE_VIEW (impl->browse_files_tree_view), impl->single_click_activate);
+
+  /* unset the current cursor if it's the old single-click cursor */
+  if (impl->browse_files_tree_view->window != NULL && 
+      !impl->single_click_activate && !impl->has_busy_cursor)
+    {
+      gdk_window_set_cursor (impl->browse_files_tree_view->window, NULL);
+      gdk_display_flush (gtk_widget_get_display (GTK_WIDGET (impl->browse_files_tree_view)));
+    }
+
+  profile_end ("end", NULL);
+}
+
 /* Callback used when a GtkSettings value changes */
 static void
 settings_notify_cb (GObject               *object,
@@ -5784,15 +5848,17 @@ settings_notify_cb (GObject               *object,
   if (strcmp (name, "gtk-icon-theme-name") == 0 ||
       strcmp (name, "gtk-icon-sizes") == 0)
     change_icon_theme (impl);
+  else if (strcmp (name, "gtk-files-single-click-activate") == 0)
+    change_single_click_policy (impl);
 
   profile_end ("end", NULL);
 }
 
 /* Installs a signal handler for GtkSettings so that we can monitor changes in
- * the icon theme.
+ * the icon theme and the single click policy.
  */
 static void
-check_icon_theme (GtkFileChooserDefault *impl)
+check_settings (GtkFileChooserDefault *impl)
 {
   GtkSettings *settings;
 
@@ -5811,6 +5877,7 @@ check_icon_theme (GtkFileChooserDefault *impl)
 						   G_CALLBACK (settings_notify_cb), impl);
 
       change_icon_theme (impl);
+      change_single_click_policy (impl);
     }
 
   profile_end ("end", NULL);
@@ -5852,7 +5919,7 @@ gtk_file_chooser_default_screen_changed (GtkWidget *widget,
     GTK_WIDGET_CLASS (_gtk_file_chooser_default_parent_class)->screen_changed (widget, previous_screen);
 
   remove_settings_signal (impl, previous_screen);
-  check_icon_theme (impl);
+  check_settings (impl);
 
   emit_default_size_changed (impl);
 
@@ -6184,6 +6251,8 @@ set_busy_cursor (GtkFileChooserDefault *impl,
 
   if (cursor)
     gdk_cursor_unref (cursor);
+
+  impl->has_busy_cursor = busy;
 }
 
 /* Creates a sort model to wrap the file system model and sets it on the tree view */
