@@ -320,6 +320,7 @@ gtk_public_h_sources = 		\
 	gtkscrolledwindow.h	\
 	gtksearchentry.h	\
 	gtkselection.h		\
+	gtkselectionwindow.h	\
 	gtkseparator.h		\
 	gtkseparatormenuitem.h	\
 	gtkseparatortoolitem.h	\
@@ -809,6 +810,7 @@ gtk_base_c_sources = 		\
 	gtkscrollbar.c		\
 	gtkscrolledwindow.c	\
 	gtkselection.c		\
+	gtkselectionwindow.c	\
 	gtkseparator.c		\
 	gtkseparatormenuitem.c	\
 	gtkseparatortoolitem.c	\
