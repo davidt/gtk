@@ -522,7 +522,6 @@ gtk_private_h_sources =		\
 	gtksearchengine.h	\
 	gtksearchenginesimple.h	\
 	gtkselectionprivate.h	\
-	gtkselectionwindowprivate.h	\
 	gtksettingsprivate.h	\
 	gtksizegroup-private.h	\
 	gtksizerequestcacheprivate.h	\
@@ -810,7 +809,6 @@ gtk_base_c_sources = 		\
 	gtkscrollbar.c		\
 	gtkscrolledwindow.c	\
 	gtkselection.c		\
-	gtkselectionwindow.c	\
 	gtkseparator.c		\
 	gtkseparatormenuitem.c	\
 	gtkseparatortoolitem.c	\
