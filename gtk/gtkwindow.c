@@ -4909,8 +4909,6 @@ gtk_window_show (GtkWidget *widget)
   gboolean need_resize;
   gboolean is_plug;
 
-  create_decoration (widget);
-
   if (!gtk_widget_is_toplevel (GTK_WIDGET (widget)))
     {
       GTK_WIDGET_CLASS (gtk_window_parent_class)->show (widget);
@@ -5289,6 +5287,8 @@ gtk_window_realize (GtkWidget *widget)
 
   window = GTK_WINDOW (widget);
   priv = window->priv;
+
+  create_decoration (widget);
 
   gtk_widget_get_allocation (widget, &allocation);
 
